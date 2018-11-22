@@ -25,7 +25,7 @@ from ruia_pyppeteer import PyppeteerRequest as Request
 
 request = Request("https://www.jianshu.com/", load_js=True)
 response = asyncio.get_event_loop().run_until_complete(request.fetch())
-print(response.body)
+print(response.html)
 ```
 
 **Complete example**
