@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 ruia = "*"
 pyppeteer = "*"
+async-timeout = "*"
+cchardet = "*"
 
 [dev-packages]
 
