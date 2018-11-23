@@ -20,6 +20,9 @@ class PyppeteerRequest(Request):
                  headers: dict = {},
                  load_js: bool = False,
                  metadata: dict = {},
+                 pyppeteer_args: list = [],
+                 pyppeteer_launch_options: dict = {},
+                 pyppeteer_page_options: dict = {},
                  request_config: dict = {},
                  request_session=None,
                  res_type: str = 'text',
@@ -33,6 +36,9 @@ class PyppeteerRequest(Request):
                                                res_type=res_type,
                                                **kwargs)
         self.load_js = load_js
+        self.pyppeteer_args = pyppeteer_args
+        self.pyppeteer_launch_options = pyppeteer_launch_options
+        self.pyppeteer_page_options = pyppeteer_page_options
 
     async def fetch(self) -> Response:
         if self.request_config.get('DELAY', 0) > 0:
@@ -42,9 +48,15 @@ class PyppeteerRequest(Request):
 
             if self.load_js:
                 if not hasattr(self, "browser"):
-                    self.browser = await pyppeteer.launch(headless=True, args=['--no-sandbox'])
+                    self.pyppeteer_args.extend(['--no-sandbox'])
+                    self.browser = await pyppeteer.launch(
+                        headless=True,
+                        args=self.pyppeteer_args,
+                        options=self.pyppeteer_launch_options
+                    )
                 page = await  self.browser.newPage()
-                res = await page.goto(self.url, options={'timeout': int(timeout * 1000)})
+                self.pyppeteer_page_options.update({'timeout': int(timeout * 1000)})
+                res = await page.goto(self.url, options=self.pyppeteer_page_options)
                 data = await page.content()
                 res_cookies = await page.cookies()
                 res_headers = res.headers

@@ -15,7 +15,7 @@ def read(file_name):
 
 setup(
     name='ruia_pyppeteer',
-    version='0.0.1',
+    version='0.0.2',
     author='Howie Hu',
     description="ruia_pyppeteer - A Ruia plugin for loading javascript - pyppeteer.",
     long_description=read('README.md'),
