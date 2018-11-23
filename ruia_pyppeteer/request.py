@@ -4,7 +4,6 @@
 """
 import asyncio
 import async_timeout
-import cchardet
 import pyppeteer
 
 from inspect import iscoroutinefunction
@@ -72,9 +71,7 @@ class PyppeteerRequest(Request):
                         elif self.res_type == 'json':
                             data = await resp.json()
                         else:
-                            content = await resp.read()
-                            charset = cchardet.detect(content)
-                            data = content.decode(charset['encoding'])
+                            data = await resp.text()
                         res_cookies, res_headers, res_history = resp.cookies, resp.headers, resp.history
         except Exception as e:
             res_headers = {}
