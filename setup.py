@@ -15,12 +15,12 @@ def read(file_name):
 
 setup(
     name='ruia_pyppeteer',
-    version='0.0.3',
+    version='0.0.4',
     author='Howie Hu',
     description="ruia_pyppeteer - A Ruia plugin for loading javascript - pyppeteer.",
     long_description=read('README.md'),
     author_email='xiaozizayang@gmail.com',
-    install_requires=['ruia>=0.0.4', 'pyppeteer'],
+    install_requires=['ruia>=0.4.9', 'pyppeteer'],
     url="https://github.com/ruia-plugins/ruia-pyppeteer",
     packages=find_packages(),
     license='MIT',
@@ -32,7 +32,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     project_urls={
-        'Documentation': 'https://github.com/ruia-plugins/ruia-pyppeteer',
-        'Source': 'https://github.com/ruia-plugins/ruia-pyppeteer',
+        'Documentation': 'https://github.com/python-ruia/ruia-pyppeteer',
+        'Source': 'https://github.com/python-ruia/ruia-pyppeteer',
     }
 )

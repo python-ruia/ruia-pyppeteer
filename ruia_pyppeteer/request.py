@@ -6,45 +6,51 @@ import asyncio
 import async_timeout
 import pyppeteer
 
-from inspect import iscoroutinefunction
+from typing import Optional
 
 from ruia import Request
 from ruia.response import Response
+from ruia_pyppeteer.response import PyppeteerResponse
 
 
 class PyppeteerRequest(Request):
 
     def __init__(self, url: str, method: str = 'GET', *,
                  callback=None,
-                 headers: dict = {},
-                 load_js: bool = False,
-                 metadata: dict = {},
-                 pyppeteer_args: list = [],
-                 pyppeteer_launch_options: dict = {},
-                 pyppeteer_page_options: dict = {},
-                 request_config: dict = {},
+                 encoding: Optional[str] = None,
+                 headers: dict = None,
+                 metadata: dict = None,
+                 request_config: dict = None,
                  request_session=None,
-                 res_type: str = 'text',
+                 load_js: bool = True,
+                 pyppeteer_args: list = None,
+                 pyppeteer_launch_options: dict = None,
+                 pyppeteer_page_options: dict = None,
+                 pyppeteer_viewport: dict = None,
+                 close_pyppeteer_browser=False,
                  **kwargs):
         super(PyppeteerRequest, self).__init__(url, method,
                                                callback=callback,
+                                               encoding=encoding,
                                                headers=headers,
                                                metadata=metadata,
                                                request_config=request_config,
                                                request_session=request_session,
-                                               res_type=res_type,
                                                **kwargs)
         self.load_js = load_js
-        self.pyppeteer_args = pyppeteer_args
-        self.pyppeteer_launch_options = pyppeteer_launch_options
-        self.pyppeteer_page_options = pyppeteer_page_options
+        self.pyppeteer_args = pyppeteer_args or []
+        self.pyppeteer_launch_options = pyppeteer_launch_options or {}
+        self.pyppeteer_page_options = pyppeteer_page_options or {}
+        self.pyppeteer_viewport = pyppeteer_viewport or {'width': 1080, 'height': 900}
+        self.close_pyppeteer_browser = close_pyppeteer_browser
 
-    async def fetch(self) -> Response:
+    async def fetch(self) -> PyppeteerResponse:
+        """Fetch all the information by using aiohttp"""
         if self.request_config.get('DELAY', 0) > 0:
             await asyncio.sleep(self.request_config['DELAY'])
-        try:
-            timeout = self.request_config.get('TIMEOUT', 10)
 
+        timeout = self.request_config.get('TIMEOUT', 10)
+        try:
             if self.load_js:
                 if not hasattr(self, "browser"):
                     self.pyppeteer_args.extend(['--no-sandbox'])
@@ -55,50 +61,49 @@ class PyppeteerRequest(Request):
                     )
                 page = await  self.browser.newPage()
                 self.pyppeteer_page_options.update({'timeout': int(timeout * 1000)})
-                res = await page.goto(self.url, options=self.pyppeteer_page_options)
-                data = await page.content()
-                res_cookies = await page.cookies()
-                res_headers = res.headers
-                res_history = None
-                res_status = res.status
+
+                resp = await page.goto(self.url, options=self.pyppeteer_page_options)
+                await page.setViewport(self.pyppeteer_viewport)
+
+                resp_data = await page.content()
+                response = PyppeteerResponse(url=self.url,
+                                             method=self.method,
+                                             encoding=self.encoding,
+                                             html=resp_data,
+                                             page=page,
+                                             browser = self.browser,
+                                             metadata=self.metadata,
+                                             cookies=await page.cookies(),
+                                             headers=resp.headers,
+                                             history=(),
+                                             status=resp.status,
+                                             aws_json=resp.json,
+                                             aws_text=resp.text,
+                                             aws_read=resp.buffer)
             else:
                 async with async_timeout.timeout(timeout):
-                    async with self.current_request_func as resp:
-                        res_status = resp.status
-                        assert res_status in [200, 201]
-                        if self.res_type == 'bytes':
-                            data = await resp.read()
-                        elif self.res_type == 'json':
-                            data = await resp.json()
-                        else:
-                            data = await resp.text()
-                        res_cookies, res_headers, res_history = resp.cookies, resp.headers, resp.history
-        except Exception as e:
-            res_headers = {}
-            res_history = ()
-            res_status = 0
-            data, res_cookies = None, None
-            self.logger.error(f"<Error: {self.url} {res_status} {str(e)}>")
-
-        if self.retry_times > 0 and data is None:
-            retry_times = self.request_config.get('RETRIES', 3) - self.retry_times + 1
-            self.logger.info(f'<Retry url: {self.url}>, Retry times: {retry_times}')
-            self.retry_times -= 1
-            retry_func = self.request_config.get('RETRY_FUNC')
-            if retry_func and iscoroutinefunction(retry_func):
-                request_ins = await retry_func(self)
-                if isinstance(request_ins, Request):
-                    return await request_ins.fetch()
-            return await self.fetch()
-
-        await self.close()
-
-        response = Response(url=self.url,
-                            html=data,
-                            metadata=self.metadata,
-                            res_type=self.res_type,
-                            cookies=res_cookies,
-                            headers=res_headers,
-                            history=res_history,
-                            status=res_status)
-        return response
+                    resp = await self._make_request()
+                resp_data = await resp.text(encoding=self.encoding)
+                response = Response(url=self.url,
+                                    method=self.method,
+                                    encoding=resp.get_encoding(),
+                                    html=resp_data,
+                                    metadata=self.metadata,
+                                    cookies=resp.cookies,
+                                    headers=resp.headers,
+                                    history=resp.history,
+                                    status=resp.status,
+                                    aws_json=resp.json,
+                                    aws_text=resp.text,
+                                    aws_read=resp.read)
+            if not response.ok:
+                return await self._retry()
+            return response
+        except asyncio.TimeoutError:
+            # Retry for timeout
+            return await self._retry()
+        finally:
+            # Close client session
+            await self._close_request_session()
+            if self.close_pyppeteer_browser:
+                await self.browser.close()

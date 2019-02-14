@@ -4,11 +4,29 @@
 """
 
 import asyncio
-
+#
 from ruia_pyppeteer import PyppeteerRequest as Request
 
-pyppeteer_page_options = {'waitUntil': 'networkidle0'}
+# pyppeteer_args = ['--proxy-server=127.0.0.1:1087']
+pyppeteer_args = []
+pyppeteer_page_options = {
+    'waitUntil': 'networkidle0',
+}
 
-request = Request("https://www.jianshu.com/", load_js=True, pyppeteer_page_options=pyppeteer_page_options)
-response = asyncio.get_event_loop().run_until_complete(request.fetch())
-print(response.html)
+
+async def load_js_script():
+    request = Request("https://www.jianshu.com/")
+    response = await request.fetch()
+    dimensions = await response.page.evaluate('''() => {
+            return {
+                width: document.documentElement.clientWidth,
+                height: document.documentElement.clientHeight,
+                deviceScaleFactor: window.devicePixelRatio,
+            }
+        }''')
+
+    print(dimensions)
+
+
+if __name__ == '__main__':
+    asyncio.get_event_loop().run_until_complete(load_js_script())
