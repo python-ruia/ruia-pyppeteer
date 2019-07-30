@@ -19,6 +19,7 @@ setup(
     author='Howie Hu',
     description="ruia_pyppeteer - A Ruia plugin for loading javascript - pyppeteer.",
     long_description=read('README.md'),
+    long_description_content_type="text/markdown",
     author_email='xiaozizayang@gmail.com',
     install_requires=['ruia>=0.6.1', 'pyppeteer'],
     url="https://github.com/ruia-plugins/ruia-pyppeteer",
