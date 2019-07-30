@@ -104,6 +104,6 @@ class PyppeteerRequest(Request):
             return await self._retry()
         finally:
             # Close client session
-            await self._close_request_session()
+            await self._close_request()
             if self.close_pyppeteer_browser:
                 await self.browser.close()
