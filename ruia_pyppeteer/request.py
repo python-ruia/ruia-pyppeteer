@@ -97,11 +97,11 @@ class PyppeteerRequest(Request):
                                     aws_text=resp.text,
                                     aws_read=resp.read)
             if not response.ok:
-                return await self._retry()
+                return await self._retry( error_msg=f"Request url failed with status {response.status}!")
             return response
         except asyncio.TimeoutError:
             # Retry for timeout
-            return await self._retry()
+            return await self._retry("timeout")
         finally:
             # Close client session
             await self._close_request()

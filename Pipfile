@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-ruia = ">=0.4.9"
+ruia = ">=0.6.1"
 async-timeout = "*"
 cchardet = "*"
 
