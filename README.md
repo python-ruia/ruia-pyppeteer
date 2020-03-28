@@ -2,7 +2,7 @@
 
 A [Ruia](https://github.com/howie6879/ruia) plugin for loading javascript
 
-> Notice:  Works on ruia >= 0.6.1
+> Notice:  Works on ruia >= 0.6.7
 
 ### Installation
 
