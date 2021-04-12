@@ -72,12 +72,10 @@ class PyppeteerRequest(Request):
                 resp = await page.goto(self.url, options=self.pyppeteer_page_options)
                 await page.setViewport(self.pyppeteer_viewport)
 
-                resp_data = await page.content()
                 response = PyppeteerResponse(
                     url=self.url,
                     method=self.method,
                     encoding=self.encoding,
-                    html=resp_data,
                     page=page,
                     browser=self.browser,
                     metadata=self.metadata,
@@ -92,12 +90,10 @@ class PyppeteerRequest(Request):
             else:
                 async with async_timeout.timeout(timeout):
                     resp = await self._make_request()
-                resp_data = await resp.text(encoding=self.encoding)
                 response = Response(
                     url=self.url,
                     method=self.method,
                     encoding=resp.get_encoding(),
-                    html=resp_data,
                     metadata=self.metadata,
                     cookies=resp.cookies,
                     headers=resp.headers,
