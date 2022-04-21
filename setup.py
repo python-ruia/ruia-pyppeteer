@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """
  Created by howie.hu at 2018/11/22.
+ - python setup.py sdist
+ - twine upload dist/*
 """
 
 import os
@@ -15,7 +17,7 @@ def read(file_name):
 
 setup(
     name="ruia_pyppeteer",
-    version="0.0.7",
+    version="0.0.8",
     author="Howie Hu",
     description="ruia_pyppeteer - A Ruia plugin for loading javascript - pyppeteer.",
     long_description=read("README.md"),
@@ -30,6 +32,8 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     project_urls={

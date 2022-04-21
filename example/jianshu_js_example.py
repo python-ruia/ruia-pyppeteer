@@ -3,7 +3,7 @@
  Created by howie.hu at 2018/9/8.
 """
 
-from ruia import AttrField, TextField, Item
+from ruia import AttrField, Item, TextField
 
 from ruia_pyppeteer import PyppeteerSpider as Spider
 
@@ -13,7 +13,7 @@ class JianshuItem(Item):
     author_name = TextField(css_select="a.name")
     author_url = AttrField(attr="href", css_select="a.name")
 
-    async def clean_author_name(selfself, author_name):
+    async def clean_author_name(self, author_name):
         return author_name.strip()
 
     async def clean_author_url(self, author_url):
@@ -25,9 +25,11 @@ class JianshuSpider(Spider):
     concurrency = 10
 
     async def parse(self, response):
-        async for item in JianshuItem.get_items(html=response.html):
+        html = await response.page.content()
+        async for item in JianshuItem.get_items(html=html):
             # Loading js by using PyppeteerRequest
             print(item)
+        await response.browser.close()
 
 
 if __name__ == "__main__":

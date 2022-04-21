@@ -10,6 +10,9 @@ cchardet = "*"
 pyppeteer = "*"
 
 [dev-packages]
+black = "*"
+isort = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.6"

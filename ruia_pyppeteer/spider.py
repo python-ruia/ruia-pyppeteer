@@ -6,6 +6,7 @@
 from typing import Optional
 
 from ruia import Spider
+
 from ruia_pyppeteer.request import PyppeteerRequest as Request
 
 
@@ -14,7 +15,7 @@ class PyppeteerSpider(Spider):
     pyppeteer_launch_options = {}
     pyppeteer_page_options = {}
     pyppeteer_viewport = {}
-    close_pyppeteer_browser = True
+    close_pyppeteer_browser = False
 
     def request(
         self,

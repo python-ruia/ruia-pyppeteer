@@ -3,13 +3,15 @@
  Created by howie.hu at 2018/11/22.
 """
 import asyncio
-import async_timeout
-import pyppeteer
 
 from typing import Optional
 
+import async_timeout
+import pyppeteer
+
 from ruia import Request
 from ruia.response import Response
+
 from ruia_pyppeteer.response import PyppeteerResponse
 
 
@@ -51,20 +53,21 @@ class PyppeteerRequest(Request):
         self.pyppeteer_viewport = pyppeteer_viewport or {"width": 1080, "height": 900}
         self.close_pyppeteer_browser = close_pyppeteer_browser
 
-    async def fetch(self) -> PyppeteerResponse:
+    async def fetch(self, delay=True) -> PyppeteerResponse:
         """Fetch all the information by using aiohttp"""
-        if self.request_config.get("DELAY", 0) > 0:
+        if delay and self.request_config.get("DELAY", 0) > 0:
             await asyncio.sleep(self.request_config["DELAY"])
 
         timeout = self.request_config.get("TIMEOUT", 10)
         try:
             if self.load_js:
                 if not hasattr(self, "browser"):
-                    self.pyppeteer_args.extend(["--no-sandbox"])
+                    self.pyppeteer_args.extend(["--no-sandbox", "--disable-infobars"])
                     self.browser = await pyppeteer.launch(
                         headless=True,
                         args=self.pyppeteer_args,
                         options=self.pyppeteer_launch_options,
+                        dumpio=True,
                     )
                 page = await self.browser.newPage()
                 self.pyppeteer_page_options.update({"timeout": int(timeout * 1000)})
@@ -113,6 +116,7 @@ class PyppeteerRequest(Request):
             return await self._retry("timeout")
         finally:
             # Close client session
-            await self._close_request()
+            if not self.load_js:
+                await self._close_request()
             if self.close_pyppeteer_browser:
                 await self.browser.close()
